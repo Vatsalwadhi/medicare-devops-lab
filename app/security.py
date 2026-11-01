@@ -34,6 +34,7 @@ def init_security(app):
             "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
             "frame-ancestors 'none'; form-action 'self'; base-uri 'self'")
         resp.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        resp.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
         resp.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         resp.headers["Cache-Control"] = "no-store" if g.get("user") else resp.headers.get("Cache-Control", "no-cache")
         resp.headers["X-App-Version"] = current_app.config["APP_VERSION"]
