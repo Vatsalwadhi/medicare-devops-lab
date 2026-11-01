@@ -15,7 +15,7 @@ switch_live() {
 smoke() {  # $1 = service name; checks health and reports the version served
   local ip; ip=$(kubectl -n $NS get svc "$1" -o jsonpath='{.spec.clusterIP}')
   for i in $(seq 1 20); do
-    if curl -fsS "http://$ip/api/health" >/dev/null 2>&1; then curl -fsS "http://$ip/api/version"; echo; return 0; fi
+    if curl -fsS --max-time 5 "http://$ip/api/health" >/dev/null 2>&1; then curl -fsS --max-time 5 "http://$ip/api/version"; echo; return 0; fi
     sleep 3
   done
   echo "Smoke test FAILED for $1"; return 1
@@ -35,7 +35,7 @@ case "${1:-status}" in
       "$DIR/k8s/bluegreen/deployment.tmpl.yaml" | kubectl apply -f -
     kubectl -n $NS rollout status deploy/"medicare-$TARGET" --timeout=180s
     echo ">>> Testing '$TARGET' before it receives traffic"
-    [ "$TARGET" = "$LIVE" ] || kubectl -n $NS patch svc medicare-preview -p "{\"spec\":{\"selector\":{\"app\":\"medicare-bg\",\"color\":\"$TARGET\"}}}"
+    kubectl -n $NS patch svc medicare-preview -p "{\"spec\":{\"selector\":{\"app\":\"medicare-bg\",\"color\":\"$TARGET\"}}}"
     smoke medicare-preview
     echo ">>> Switching live traffic: $LIVE -> $TARGET"
     switch_live "$TARGET"
