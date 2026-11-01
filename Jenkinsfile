@@ -52,7 +52,7 @@ pipeline {
       steps {
         sh '''
           for i in $(seq 1 20); do curl -fs http://localhost:30080/api/health && break; sleep 3; done
-          echo; curl -fs http://localhost:30080/api/version; echo
+          echo; curl -fs --retry 5 --retry-connrefused --retry-delay 2 http://localhost:30080/api/version; echo
           kubectl -n medicare get deploy,pods,svc -o wide
         '''
       }
