@@ -1,0 +1,58 @@
+// Experiment 2: automated blue-green deployment of MediCare+ on Kubernetes
+pipeline {
+  agent any
+  parameters {
+    choice(name: 'ACTION', choices: ['deploy', 'rollback', 'status'],
+           description: 'deploy = release to idle colour and switch traffic; rollback = switch traffic back')
+  }
+  environment {
+    REGISTRY   = 'localhost:5000'
+    IMAGE      = "${REGISTRY}/medicare-hms"
+    VERSION    = "2.0.${BUILD_NUMBER}"
+    KUBECONFIG = '/var/lib/jenkins/.kube/config'
+  }
+  options { timestamps(); disableConcurrentBuilds() }
+  stages {
+    stage('Checkout') { steps { checkout scm } }
+    stage('Test') {
+      when { expression { params.ACTION == 'deploy' } }
+      steps {
+        sh '''
+          python3 -m venv .venv && . .venv/bin/activate
+          pip install -q -r requirements.txt pytest && pytest -q tests
+        '''
+      }
+    }
+    stage('Build & Push Image') {
+      when { expression { params.ACTION == 'deploy' } }
+      steps { sh 'docker build -t $IMAGE:$VERSION . && docker push $IMAGE:$VERSION' }
+    }
+    stage('Prepare Cluster') {
+      steps {
+        sh '''
+          kubectl apply -f k8s/00-namespace.yaml
+          bash scripts/create-secrets.sh
+          kubectl apply -f k8s/10-postgres.yaml -f k8s/30-networkpolicy.yaml
+          kubectl -n medicare rollout status statefulset/postgres --timeout=180s
+        '''
+      }
+    }
+    stage('Blue-Green Deploy') {
+      when { expression { params.ACTION == 'deploy' } }
+      steps { sh 'bash scripts/bluegreen.sh deploy $IMAGE:$VERSION $VERSION' }
+    }
+    stage('Rollback') {
+      when { expression { params.ACTION == 'rollback' } }
+      steps { sh 'bash scripts/bluegreen.sh rollback' }
+    }
+    stage('Verify Live Traffic') {
+      steps {
+        sh '''
+          bash scripts/bluegreen.sh status
+          echo "Live   (30090):"; curl -fs http://localhost:30090/api/version; echo
+          echo "Preview(30091):"; curl -fs http://localhost:30091/api/version || echo "no idle colour yet"; echo
+        '''
+      }
+    }
+  }
+}

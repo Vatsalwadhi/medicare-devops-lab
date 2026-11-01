@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<h1>Security Audit Log</h1>
+<p class="small">Every login, record access and data change is recorded (latest 200 events).</p>
+<div class="card"><table class="table"><thead><tr><th>Time (UTC)</th><th>User</th><th>Action</th><th>Source IP</th></tr></thead><tbody>
+{% for l in logs %}<tr><td>{{ l.ts.strftime('%d %b %Y %H:%M:%S') }}</td><td>{{ users.get(l.user_id, 'anonymous') }}</td><td>{{ l.action }}</td><td>{{ l.ip }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

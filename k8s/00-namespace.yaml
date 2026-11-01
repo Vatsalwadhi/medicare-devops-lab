@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: medicare
+  labels:
+    app.kubernetes.io/part-of: medicare-hms
+    # Pod Security Admission: enforce the "restricted" profile for app workloads
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted

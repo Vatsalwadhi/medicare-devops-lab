@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Patient Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Welcome, {{ current_user.name }}</h1>
+<p class="small">Patient ID: MCP-{{ '%05d' % patient.id }} &middot; Blood group {{ patient.blood_group or '-' }}</p></div>
+<a class="btn" href="{{ url_for('patient.book') }}">+ Book appointment</a></div>
+<div class="grid grid-4 kpis">
+  <div class="kpi"><span>Upcoming visits</span><strong>{{ upcoming|length }}</strong></div>
+  <div class="kpi"><span>Total appointments</span><strong>{{ appts|length }}</strong></div>
+  <div class="kpi"><span>Medical records</span><strong>{{ records }}</strong></div>
+  <div class="kpi"><span>Amount due</span><strong>Rs. {{ due }}</strong></div>
+</div>
+<div class="card">
+<h2>My Appointments</h2>
+<table class="table"><thead><tr><th>#</th><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>
+{% for a in appts %}
+<tr><td>{{ a.id }}</td><td>{{ a.doctor.user.name }}</td><td>{{ a.doctor.department }}</td><td>{{ a.date.strftime('%d %b %Y') }}</td><td>{{ a.slot }}</td><td>{{ a.reason }}</td>
+<td><span class="status s-{{ a.status|lower }}">{{ a.status }}</span></td>
+<td>{% if a.status == 'Scheduled' %}<form method="post" action="{{ url_for('patient.cancel', aid=a.id) }}" class="confirm-form" data-confirm="Cancel this appointment?"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-ghost">Cancel</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="8">No appointments yet. <a href="{{ url_for('patient.book') }}">Book your first visit</a>.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

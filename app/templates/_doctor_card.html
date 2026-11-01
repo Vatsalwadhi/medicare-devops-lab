@@ -1,0 +1,9 @@
+<div class="card doctor">
+  <div class="avatar">{{ d.user.name.split(' ')[1][0] }}{{ d.user.name.split(' ')[-1][0] }}</div>
+  <h3>{{ d.user.name }}</h3>
+  <div class="tag">{{ d.specialty }}</div>
+  <p class="small">{{ d.qualification }} &middot; {{ d.experience_years }} yrs experience</p>
+  <p>{{ d.bio }}</p>
+  <div class="card-foot"><span>Fee <strong>Rs. {{ d.fee }}</strong></span>
+    <a class="btn btn-sm" href="{{ url_for('patient.book', doctor=d.id) }}">Book</a></div>
+</div>

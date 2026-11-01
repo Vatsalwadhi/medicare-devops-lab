@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <span class="eyebrow">Trusted multispeciality care</span>
+    <h1>Your health, managed with <em>care</em> and <em>security</em>.</h1>
+    <p>Book appointments with specialists, access your prescriptions and medical records, and pay bills online &mdash; all in one secure patient portal.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('patient.book') }}">Book an Appointment</a>
+      <a class="btn btn-outline" href="{{ url_for('main.doctors') }}">Find a Doctor</a>
+    </div>
+    <div class="stats">
+      <div><strong>{{ stats.doctors }}</strong><span>Specialist doctors</span></div>
+      <div><strong>{{ stats.patients }}</strong><span>Registered patients</span></div>
+      <div><strong>{{ stats.appointments }}</strong><span>Appointments booked</span></div>
+    </div>
+  </div>
+  <div class="hero-card">
+    <h3>Quick Booking</h3>
+    <ol class="steps">
+      <li><b>1</b> Create your patient account</li>
+      <li><b>2</b> Choose a specialist and time slot</li>
+      <li><b>3</b> Consult and receive e-prescription</li>
+    </ol>
+    <div class="hero-badge">Average wait time <strong>&lt; 15 min</strong></div>
+  </div>
+</section>
+
+<h2 class="section-title">Departments</h2>
+<div class="grid grid-3">
+  {% for name, desc in departments %}
+  <a class="card dept" href="{{ url_for('main.doctors', department=name) }}">
+    <div class="dept-icon">{{ name[0] }}</div>
+    <h3>{{ name }}</h3><p>{{ desc }}</p>
+  </a>
+  {% endfor %}
+</div>
+
+<h2 class="section-title">Featured Specialists</h2>
+<div class="grid grid-3">
+  {% for d in featured %}{% include "_doctor_card.html" %}{% endfor %}
+</div>
+{% endblock %}

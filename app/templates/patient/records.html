@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}My Medical Records{% endblock %}
+{% block content %}
+<h1>My Medical Records &amp; Prescriptions</h1>
+<p class="small">Clinical notes are stored encrypted (AES via Fernet) and decrypted only for authorised viewers.</p>
+{% for r in records %}
+<div class="card record">
+  <div class="record-head"><h3>{{ r.created_at.strftime('%d %b %Y') }} &middot; {{ r.doctor.user.name }}</h3><span class="tag">{{ r.doctor.department }}</span></div>
+  <div class="vitals"><span>BP <b>{{ r.blood_pressure or '-' }}</b></span><span>Pulse <b>{{ r.pulse or '-' }}</b></span><span>Temp <b>{{ r.temperature or '-' }} &deg;F</b></span></div>
+  <p><strong>Diagnosis:</strong> {{ decrypt(r.diagnosis_enc) }}</p>
+  {% if r.notes_enc %}<p><strong>Notes:</strong> {{ decrypt(r.notes_enc) }}</p>{% endif %}
+  {% if r.prescriptions %}<table class="table"><thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th></tr></thead><tbody>
+  {% for p in r.prescriptions %}<tr><td>{{ p.medicine }}</td><td>{{ p.dosage }}</td><td>{{ p.frequency }}</td><td>{{ p.duration }}</td></tr>{% endfor %}
+  </tbody></table>{% endif %}
+  <button class="btn btn-sm btn-ghost print-btn">Print</button>
+</div>
+{% else %}<div class="card"><p>No medical records yet. Records appear after your consultation.</p></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="auth wide">
+  <div class="card">
+    <h1>Patient Registration</h1>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Full name<input name="name" required maxlength="120"></label>
+      <label>Email<input type="email" name="email" required></label>
+      <label>Phone<input name="phone" maxlength="20" placeholder="+91"></label>
+      <label>Date of birth<input type="date" name="dob"></label>
+      <label>Gender<select name="gender"><option>Female</option><option>Male</option><option>Other</option></select></label>
+      <label>Blood group<select name="blood_group">{% for b in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}<option>{{ b }}</option>{% endfor %}</select></label>
+      <label class="span-2">Address<input name="address" maxlength="255"></label>
+      <label>Password<input type="password" name="password" required autocomplete="new-password"></label>
+      <label>Confirm password<input type="password" name="confirm" required autocomplete="new-password"></label>
+      <p class="small span-2">Password: at least 8 characters including upper and lower case, a digit and a symbol.</p>
+      <button class="btn span-2">Create account</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

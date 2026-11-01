@@ -1,0 +1,94 @@
+// Experiment 3: DevSecOps pipeline for the MediCare+ healthcare system
+// Security gates: secrets -> SAST -> SCA -> tests -> image scan -> IaC scan -> deploy -> DAST -> runtime checks
+pipeline {
+  agent any
+  environment {
+    REGISTRY   = 'localhost:5000'
+    IMAGE      = "${REGISTRY}/medicare-hms"
+    VERSION    = "3.0.${BUILD_NUMBER}"
+    KUBECONFIG = '/var/lib/jenkins/.kube/config'
+  }
+  options { timestamps(); disableConcurrentBuilds() }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm; sh 'mkdir -p reports' }
+    }
+    stage('Secret Scanning (Trivy)') {
+      steps {
+        sh 'trivy fs --scanners secret --exit-code 1 --format table . | tee reports/secrets.txt'
+      }
+    }
+    stage('SAST (Bandit)') {
+      steps {
+        sh '''
+          python3 -m venv .venv && . .venv/bin/activate
+          pip install -q bandit pip-audit pytest -r requirements.txt
+          bandit -r app -f html -o reports/bandit.html || true
+          bandit -r app --severity-level high --confidence-level medium
+        '''
+      }
+    }
+    stage('SCA - Dependencies (pip-audit)') {
+      steps {
+        sh '. .venv/bin/activate && pip-audit -r requirements.txt --desc | tee reports/pip-audit.txt'
+      }
+    }
+    stage('Unit & Security Tests') {
+      steps {
+        sh '. .venv/bin/activate && pytest -q --junitxml=reports/junit.xml tests'
+      }
+      post { always { junit 'reports/junit.xml' } }
+    }
+    stage('Build Image') {
+      steps { sh 'docker build -t $IMAGE:$VERSION .' }
+    }
+    stage('Container Image Scan (Trivy)') {
+      steps {
+        sh '''
+          trivy image --severity HIGH,CRITICAL --format table $IMAGE:$VERSION | tee reports/trivy-image.txt
+          trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 $IMAGE:$VERSION
+        '''
+      }
+    }
+    stage('IaC / K8s Config Scan (Trivy)') {
+      steps {
+        sh 'trivy config --severity HIGH,CRITICAL --exit-code 1 k8s/ Dockerfile | tee reports/trivy-config.txt'
+      }
+    }
+    stage('Push & Secure Deploy') {
+      steps {
+        sh '''
+          docker push $IMAGE:$VERSION
+          kubectl apply -f k8s/00-namespace.yaml
+          bash scripts/create-secrets.sh
+          kubectl apply -f k8s/10-postgres.yaml -f k8s/30-networkpolicy.yaml
+          kubectl -n medicare rollout status statefulset/postgres --timeout=180s
+          sed -e "s#IMAGE_PLACEHOLDER#$IMAGE:$VERSION#" -e "s#VERSION_PLACEHOLDER#$VERSION#" k8s/20-app.yaml | kubectl apply -f -
+          kubectl -n medicare rollout status deployment/medicare-web --timeout=180s
+        '''
+      }
+    }
+    stage('DAST (OWASP ZAP Baseline)') {
+      steps {
+        sh '''
+          chmod 777 reports
+          docker run --rm --network host -v $PWD/reports:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:30080 -r zap-report.html -J zap-report.json -I
+        '''
+      }
+    }
+    stage('Runtime Security Checks') {
+      steps {
+        sh '''
+          echo "== Pod security contexts =="
+          kubectl -n medicare get pods -l app=medicare-web -o jsonpath='{range .items[*]}{.metadata.name}{"  runAsNonRoot="}{.spec.securityContext.runAsNonRoot}{"  readOnlyRootFS="}{.spec.containers[0].securityContext.readOnlyRootFilesystem}{"\\n"}{end}'
+          echo "== Network policies =="; kubectl -n medicare get networkpolicy
+          echo "== HTTP security headers =="; curl -sI http://localhost:30080/ | grep -Ei "content-security|x-frame|x-content-type|referrer-policy"
+        '''
+      }
+    }
+  }
+  post {
+    always { archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true }
+  }
+}

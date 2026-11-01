@@ -1,0 +1,46 @@
+# Experiment 2: one colour (blue or green) of the MediCare+ app; rendered by scripts/bluegreen.sh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medicare-__COLOR__
+  namespace: medicare
+  labels: {app: medicare-bg, color: __COLOR__}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: medicare-bg, color: __COLOR__}
+  template:
+    metadata:
+      labels: {app: medicare-bg, color: __COLOR__, tier: web}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: web
+          image: __IMAGE__
+          imagePullPolicy: Always
+          ports: [{containerPort: 8000}]
+          envFrom:
+            - secretRef: {name: medicare-secrets}
+          env:
+            - {name: APP_VERSION, value: "__VERSION__"}
+            - {name: DEPLOY_COLOR, value: "__COLOR__"}
+          readinessProbe:
+            httpGet: {path: /api/health, port: 8000}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {}

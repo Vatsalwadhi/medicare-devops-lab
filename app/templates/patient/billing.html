@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+<h1>Billing &amp; Payments</h1>
+<div class="card"><table class="table"><thead><tr><th>Invoice</th><th>Doctor</th><th>Visit date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+{% for i in invoices %}
+<tr><td>INV-{{ '%05d' % i.id }}</td><td>{{ i.appointment.doctor.user.name }}</td><td>{{ i.appointment.date.strftime('%d %b %Y') }}</td><td>Rs. {{ i.amount }}</td>
+<td><span class="status s-{{ i.status|lower }}">{{ i.status }}</span></td>
+<td>{% if i.status == 'Unpaid' %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="invoice_id" value="{{ i.id }}"><button class="btn btn-sm">Pay now</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="6">No invoices.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

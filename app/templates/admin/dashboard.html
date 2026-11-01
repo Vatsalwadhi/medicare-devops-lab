@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Hospital Administration</h1><a class="btn" href="{{ url_for('admin.doctors') }}">Manage doctors</a></div>
+<div class="grid grid-3 kpis">
+  <div class="kpi"><span>Registered patients</span><strong>{{ stats.patients }}</strong></div>
+  <div class="kpi"><span>Doctors on staff</span><strong>{{ stats.doctors }}</strong></div>
+  <div class="kpi"><span>Total appointments</span><strong>{{ stats.appointments }}</strong></div>
+  <div class="kpi"><span>Scheduled</span><strong>{{ stats.scheduled }}</strong></div>
+  <div class="kpi"><span>Revenue collected</span><strong>Rs. {{ stats.revenue }}</strong></div>
+  <div class="kpi"><span>Pending dues</span><strong>Rs. {{ stats.pending }}</strong></div>
+</div>
+<div class="grid grid-2-1">
+<div class="card"><h2>Recent appointments</h2>
+<table class="table"><thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody>
+{% for a in recent %}<tr><td>{{ a.id }}</td><td>{{ a.patient.user.name }}</td><td>{{ a.doctor.user.name }}</td><td>{{ a.date.strftime('%d %b %Y') }} {{ a.slot }}</td><td><span class="status s-{{ a.status|lower }}">{{ a.status }}</span></td></tr>
+{% else %}<tr><td colspan="5">No appointments yet.</td></tr>{% endfor %}</tbody></table></div>
+<div class="card"><h2>By department</h2>
+{% set mx = (by_dept|map(attribute=1)|max) if by_dept else 0 %}
+{% for dept, n in by_dept %}<div class="bar-row"><span>{{ dept }}</span><progress max="{{ mx if mx > 0 else 1 }}" value="{{ n }}"></progress><b>{{ n }}</b></div>{% endfor %}
+</div></div>
+{% endblock %}

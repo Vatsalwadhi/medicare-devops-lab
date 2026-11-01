@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment{% endblock %}
+{% block content %}
+<div class="auth wide"><div class="card">
+<h1>Book an Appointment</h1>
+<form method="post" class="form-grid">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label class="span-2">Doctor<select name="doctor_id" id="doctorSelect" required>
+    <option value="">Select a specialist</option>
+    {% for d in doctors %}<option value="{{ d.id }}" data-fee="{{ d.fee }}" {% if d.id == selected %}selected{% endif %}>{{ d.user.name }} &mdash; {{ d.specialty }} (Rs. {{ d.fee }})</option>{% endfor %}
+  </select></label>
+  <label>Date<input type="date" name="date" min="{{ today }}" value="{{ today }}" required></label>
+  <label>Time slot<select name="slot" required>{% for s in slots %}<option>{{ s }}</option>{% endfor %}</select></label>
+  <label class="span-2">Reason for visit<textarea name="reason" maxlength="255" rows="3" placeholder="Describe your symptoms"></textarea></label>
+  <div class="span-2 fee-box">Consultation fee: <strong id="feeOut">&mdash;</strong></div>
+  <button class="btn span-2">Confirm booking</button>
+</form></div></div>
+{% endblock %}

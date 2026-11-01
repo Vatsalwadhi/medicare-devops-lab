@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Consultation{% endblock %}
+{% block content %}
+<h1>Consultation &mdash; {{ appt.patient.user.name }}</h1>
+<p class="small">Appointment #{{ appt.id }} &middot; {{ appt.date.strftime('%d %b %Y') }} {{ appt.slot }} &middot; Reason: {{ appt.reason or '-' }} &middot; Blood group {{ appt.patient.blood_group or '-' }}</p>
+<div class="grid grid-2-1">
+<div class="card">
+<form method="post" class="form-grid">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>Blood pressure<input name="bp" placeholder="120/80"></label>
+  <label>Pulse (bpm)<input type="number" name="pulse" min="20" max="250"></label>
+  <label>Temperature (&deg;F)<input type="number" step="0.1" name="temp" min="90" max="110"></label>
+  <span></span>
+  <label class="span-2">Diagnosis<input name="diagnosis" required maxlength="500"></label>
+  <label class="span-2">Clinical notes<textarea name="notes" rows="3"></textarea></label>
+  <div class="span-2"><h3>Prescription</h3>
+    <div id="rxRows">
+      <div class="rx-row"><input name="medicine" placeholder="Medicine"><input name="dosage" placeholder="Dosage e.g. 500 mg"><input name="frequency" placeholder="1-0-1"><input name="duration" placeholder="5 days"></div>
+    </div>
+    <button type="button" class="btn btn-sm btn-ghost" id="addRx">+ Add medicine</button>
+  </div>
+  <button class="btn span-2">Save consultation &amp; issue prescription</button>
+</form></div>
+<div class="card"><h3>Patient history</h3>
+{% for r in history %}<div class="history"><b>{{ r.created_at.strftime('%d %b %Y') }}</b> &middot; {{ r.doctor.user.name }}<br>{{ decrypt(r.diagnosis_enc) }}</div>
+{% else %}<p class="small">No previous records.</p>{% endfor %}</div>
+</div>
+{% endblock %}

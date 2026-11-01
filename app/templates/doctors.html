@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Find a Doctor{% endblock %}
+{% block content %}
+<h1>Find a Doctor</h1>
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Search by name or specialty">
+  <select name="department"><option value="">All departments</option>
+    {% for dp in departments %}<option {% if dp==dept %}selected{% endif %}>{{ dp }}</option>{% endfor %}</select>
+  <button class="btn">Search</button>
+</form>
+<p class="small">{{ doctors|length }} doctor(s) found</p>
+<div class="grid grid-3">
+  {% for d in doctors %}{% include "_doctor_card.html" %}{% else %}<p>No doctors match your search.</p>{% endfor %}
+</div>
+{% endblock %}

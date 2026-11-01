@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}All Appointments{% endblock %}
+{% block content %}
+<h1>All Appointments</h1>
+<form class="filters" method="get"><select name="status"><option value="">All statuses</option>
+{% for s in ['Scheduled','Completed','Cancelled'] %}<option {% if s==status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select><button class="btn">Filter</button></form>
+<div class="card"><table class="table"><thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>
+{% for a in appts %}<tr><td>{{ a.id }}</td><td>{{ a.patient.user.name }}</td><td>{{ a.doctor.user.name }}</td><td>{{ a.doctor.department }}</td><td>{{ a.date.strftime('%d %b %Y') }}</td><td>{{ a.slot }}</td><td><span class="status s-{{ a.status|lower }}">{{ a.status }}</span></td></tr>
+{% else %}<tr><td colspan="7">No appointments.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

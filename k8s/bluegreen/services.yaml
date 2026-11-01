@@ -1,0 +1,24 @@
+# Live service: production traffic goes to whichever colour the selector names
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicare-live
+  namespace: medicare
+  annotations: {bluegreen/active: blue}
+spec:
+  type: NodePort
+  selector: {app: medicare-bg, color: blue}
+  ports:
+    - {port: 80, targetPort: 8000, nodePort: 30090}
+---
+# Preview service: testers reach the idle colour before it goes live
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicare-preview
+  namespace: medicare
+spec:
+  type: NodePort
+  selector: {app: medicare-bg, color: green}
+  ports:
+    - {port: 80, targetPort: 8000, nodePort: 30091}

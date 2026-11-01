@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Manage Doctors{% endblock %}
+{% block content %}
+<h1>Doctors</h1>
+<div class="grid grid-2-1">
+<div class="card"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Specialty</th><th>Dept.</th><th>Exp.</th><th>Fee</th></tr></thead><tbody>
+{% for d in doctors %}<tr><td>{{ d.user.name }}</td><td>{{ d.user.email }}</td><td>{{ d.specialty }}</td><td>{{ d.department }}</td><td>{{ d.experience_years }}y</td><td>Rs. {{ d.fee }}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="card"><h2>Add doctor</h2>
+<form method="post" class="form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input name="name" placeholder="Full name (Dr. ...)" required>
+  <input type="email" name="email" placeholder="Email" required>
+  <input name="phone" placeholder="Phone">
+  <input name="specialty" placeholder="Specialty" required>
+  <select name="department">{% for dp in ['Cardiology','Neurology','Pediatrics','Orthopedics','Dermatology','General Medicine'] %}<option>{{ dp }}</option>{% endfor %}</select>
+  <input name="qualification" placeholder="Qualification">
+  <input type="number" name="experience" placeholder="Experience (years)" min="0">
+  <input type="number" name="fee" placeholder="Fee (Rs.)" min="0">
+  <textarea name="bio" placeholder="Short bio" rows="2"></textarea>
+  <input type="password" name="password" placeholder="Initial password" required autocomplete="new-password">
+  <button class="btn">Add doctor</button>
+</form></div></div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ current_user.name }}</h1><p class="small">{{ doctor.specialty }} &middot; {{ doctor.department }}</p></div></div>
+<div class="grid grid-3 kpis">
+  <div class="kpi"><span>Today's patients</span><strong>{{ today|length }}</strong></div>
+  <div class="kpi"><span>Upcoming</span><strong>{{ upcoming|length }}</strong></div>
+  <div class="kpi"><span>Consultations completed</span><strong>{{ completed|length }}</strong></div>
+</div>
+<div class="card"><h2>Appointment Queue</h2>
+<table class="table"><thead><tr><th>#</th><th>Patient</th><th>Date</th><th>Time</th><th>Reason</th><th></th></tr></thead><tbody>
+{% for a in upcoming %}
+<tr><td>{{ a.id }}</td><td>{{ a.patient.user.name }}</td><td>{{ a.date.strftime('%d %b %Y') }}</td><td>{{ a.slot }}</td><td>{{ a.reason }}</td>
+<td><a class="btn btn-sm" href="{{ url_for('doctor.consult', aid=a.id) }}">Start consultation</a></td></tr>
+{% else %}<tr><td colspan="6">No scheduled appointments.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}
